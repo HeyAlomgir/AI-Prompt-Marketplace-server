@@ -29,6 +29,31 @@ async function run() {
         await client.connect();
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
+
+        const db = client.db("ai-prompt-marketplace")
+        const promptsCollection = db.collection("prompts");
+
+
+        // creator prompt add
+
+        app.post("/api/prompts",async(req,res)=>{
+           try{
+             const newPrompt = req.body;
+            newPrompt.createdAt = new Date();
+            newPrompt.status ="pending";
+            
+            const result=await promptsCollection.insertOne(newPrompt);
+            res.status(201).send(result)
+           }catch (error) {
+                res.status(500).send({ success: false, message: error.message });
+            }
+
+        })
+
+
+
+
+
     } catch (error) {
         console.error("MongoDB Connection Error:", error);
     }
