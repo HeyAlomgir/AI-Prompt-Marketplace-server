@@ -117,11 +117,23 @@ async function run() {
         app.delete("/api/admin/users/:id",async(req,res)=>{
             try{
                 const {id}=req.params;
-                const filter={_id:id};
+                const filter={_id: new ObjectId(id)};
                 const result=await usersCollection.deleteOne(filter);
                 res.send(result)
-            }catch{
+            }catch(error){
                 res.status(500).send({success:false,message:error.message})};
+        })
+
+
+        // admin all prompt
+
+        app.get("/api/admin/prompts",async(req,res)=>{
+            try{
+                const result=await promptsCollection.find().toArray();
+                res.send(result);
+            }catch(error){
+                res.status(500).send({success:false,message:error.message})
+            }
         })
 
 
