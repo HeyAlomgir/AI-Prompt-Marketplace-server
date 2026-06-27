@@ -103,13 +103,25 @@ async function run() {
             try{
                 const{id}=req.params;
                 const{role}=req.body;
-                const filter={_id:ObjectId(id)};
+                const filter=ObjectId.isValid(id)?{_id:new ObjectId(id)}:{_id:id};
                 const updateDoc  = {$set: {role:role}};
                 const result = await usersCollection.updateOne(filter,updateDoc);
                 res.send(result)
             }catch{
                 res.status(500).send({success:false,message:error.message});
             }
+        })
+
+
+        // user delete
+        app.delete("/api/admin/users/:id",async(req,res)=>{
+            try{
+                const {id}=req.params;
+                const filter={_id:id};
+                const result=await usersCollection.deleteOne(filter);
+                res.send(result)
+            }catch{
+                res.status(500).send({success:false,message:error.message})};
         })
 
 
