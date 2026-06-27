@@ -32,6 +32,7 @@ async function run() {
 
         const db = client.db("ai-prompt-marketplace")
         const promptsCollection = db.collection("prompts");
+        const usersCollection = db.collection("user")
 
 
         // creator prompt add
@@ -60,23 +61,17 @@ async function run() {
         })
 
 
-        // 📊 Creator Dashboard Stats & Chart Data (একদম সিম্পল স্টাইল)
+        // Creator Dashboard Stats & Chart Dat
         app.get("/api/creator-analytics", async (req, res) => {
             try {
                 const allPrompts = await promptsCollection.find().toArray();
-
-                // ১. কার্ডের জন্য ছোট ছোট স্ট্যাটস ক্যালকুলেশন
                 const totalPrompts = allPrompts.length;
                 const pendingPrompts = allPrompts.filter(p => p.status === "pending").length;
                 const approvedPrompts = allPrompts.filter(p => p.status === "approved").length;
 
-                // টোটাল আর্নিং (যেগুলো সেল হয়েছে - ডেমো হিসেবে প্রাইসের সাম)
                 const totalEarnings = allPrompts.reduce((sum, p) => sum + (p.price || 0), 0);
-
-                // ২. Recharts গ্রাফের জন্য একদম রেডিমেড লাইটওয়েট ডেটা ফরম্যাট
-                // (লাস্ট ৪/৫ টা প্রম্পটের নাম আর প্রাইস দিয়ে গ্রাফ বানানোর জন্য)
                 const chartData = allPrompts.slice(0, 6).map(p => ({
-                    name: p.title.substring(0, 10) + "...", // বড় নাম ছোট করার জন্য
+                    name: p.title.substring(0, 10) + "...",
                     price: p.price || 0,
                     copied: p.copyCount || 0
                 })).reverse();
@@ -89,6 +84,18 @@ async function run() {
                 res.status(500).send({ success: false, message: error.message });
             }
         });
+
+
+        // all user get
+
+        app.get("/api/admin/users", async (req, res) => {
+            try {
+                const result = await usersCollection.find().toArray();
+                res.send(result);
+            } catch (error) {
+                res.status(500).send({ success: false, message: error.message });
+            }
+        })
 
 
 
