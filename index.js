@@ -137,6 +137,41 @@ async function run() {
         })
 
 
+        // prompt stats and rejection feedback update
+
+        app.patch("/api/admin/prompth/status/:id",async(req,res)=>{
+            try{
+                const {id}=req.params;
+                const{stats,feedback}=req.body;
+                const filter ={_id:new ObjectId(id)};
+                const updateDoc ={
+                   $set:{
+                     stats:stats,
+                    feedback:feedback || ""
+                   },
+                };
+                const result = await promptsCollection.updateOne(filter,updateDoc);
+                res.send(result);
+            }catch(error){
+                res.status(500).send({success:false, message:error.message});
+            }
+        })
+
+
+        // prompt delte api
+
+        app.delete("/api/admin/prompts/status/:id",async(req,res)=>{
+            try{
+                const {id}=req.params;
+                const filter={_id:new ObjectId(id)};
+                const result=await promptsCollection.deleteOne(filter);
+                res.send(result);
+            }catch(error){
+                res.status(500).send({success:false,message:error.message})
+            }
+        })
+
+
 
 
     } catch (error) {
