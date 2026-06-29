@@ -201,6 +201,34 @@ async function run() {
             }
         })
 
+        // admin analytics
+    
+    app.get("/api/admin/analytics", async (req, res) => {
+    try {
+  
+        const totalUsers = await usersCollection.countDocuments();
+        const totalPrompts = await promptsCollection.countDocuments();
+        const totalReviews = await reviewsCollection.countDocuments();
+
+        const promptsWithCopies = await promptsCollection.find({}, { projection: { copyCount: 1 } }).toArray();
+        const totalCopies = promptsWithCopies.reduce(
+            (sum, p) => sum + (p.copyCount || 0),
+            0
+        );
+
+        res.status(200).json({
+            totalUsers,
+            totalPrompts,
+            totalReviews,
+            totalCopies
+        });
+
+    } catch (error) {
+        console.error("Analytics Error:", error.message);
+        res.status(500).json({ message: "Internal Server Error" });
+    }
+});
+
 
         // prompt copy count
 
@@ -260,7 +288,7 @@ async function run() {
 
         // repot post api
 
-        // ১. রিপোর্ট পোস্ট API (ইউজারের জন্য - অলরেডি তোমার ফাইলে আছে, জাস্ট ফিল্ড নেম ঠিক রেখো)
+
         app.post("/api/reports", async (req, res) => {
             try {
                 const { promptId, userEmail, promptTitle, reason } = req.body;
@@ -268,7 +296,7 @@ async function run() {
                 const result = await reportsCollection.insertOne({
                     promptId,
                     userEmail,
-                    promptTitle, // বানান প্রজেক্ট অনুযায়ী promptTitle বা promptTitel রেখো
+                    promptTitle,
                     reason: reason || "Inappropriate content",
                     createdAt: new Date()
                 });
@@ -279,10 +307,10 @@ async function run() {
             }
         });
 
-        // 🌟 ২. অল রিপোর্ট গেট API (অ্যাডমিন ড্যাশবোর্ডের জন্য নতুন)
+        // all report get api
         app.get("/api/admin/reports", async (req, res) => {
             try {
-                // সব রিপোর্ট ডাটাবেজ থেকে লেটেস্ট ডেটা অনুযায়ী নিয়ে আসবে
+
                 const result = await reportsCollection.find().sort({ createdAt: -1 }).toArray();
                 res.send(result);
             } catch (error) {
@@ -294,7 +322,7 @@ async function run() {
 
 
 
-        // 🌟 ১. নতুন রিভিউ পোস্ট করার API
+        // 
         app.post("/api/reviews", async (req, res) => {
             try {
                 const { promptId, userName, userEmail, rating, comment } = req.body;
@@ -314,7 +342,7 @@ async function run() {
 
                 const result = await reviewsCollection.insertOne(newReview);
 
-                // ফ্রন্টএন্ডে রিয়েল-টাইম পুশ করার সুবিধার্থে জেনারেট হওয়া _id সহ অবজেক্টটি রিটার্ন করছি
+
                 newReview._id = result.insertedId;
                 res.status(201).send(newReview);
             } catch (error) {
@@ -322,12 +350,11 @@ async function run() {
             }
         });
 
-        // 🌟 ২. নির্দিষ্ট একটি প্রম্পটের সব রিভিউ গেট করার API
         app.get("/api/reviews/:promptId", async (req, res) => {
             try {
                 const { promptId } = req.params;
 
-                // নির্দিষ্ট promptId ম্যাচ করে লেটেস্ট রিভিউগুলো আগে আসবে (.sort)
+
                 const result = await reviewsCollection
                     .find({ promptId: promptId })
                     .sort({ createdAt: -1 })
