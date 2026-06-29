@@ -41,11 +41,11 @@ async function run() {
 
 
         // Featured prompts
-     
-       
+
+
         app.get("/api/featured-prompts", async (req, res) => {
             try {
-                
+
                 const featured = await promptsCollection
                     .find({ status: "approved" })
                     .sort({ _id: -1 })
@@ -56,7 +56,7 @@ async function run() {
                     return res.status(200).json([]);
                 }
 
-               
+
                 return res.status(200).json(featured);
             } catch (error) {
                 console.error("Native MongoDB Featured Prompts Error:", error);
@@ -392,6 +392,21 @@ async function run() {
                     .toArray();
 
                 res.send(result);
+            } catch (error) {
+                res.status(500).send({ success: false, message: error.message });
+            }
+        });
+
+        // homepage latest review
+        app.get("/api/home-reviews", async (req, res) => {
+            try {
+                const latestReviews = await reviewsCollection
+                    .find()
+                    .sort({ createdAt: -1 }) 
+                    .limit(4) 
+                    .toArray();
+
+                res.send(latestReviews);
             } catch (error) {
                 res.status(500).send({ success: false, message: error.message });
             }
