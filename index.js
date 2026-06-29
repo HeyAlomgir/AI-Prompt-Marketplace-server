@@ -37,7 +37,38 @@ async function run() {
         const reportsCollection = db.collection("reports");
         const reviewsCollection = db.collection("reviews");
 
+
+
+
+        // Featured prompts
+     
+       
+        app.get("/api/featured-prompts", async (req, res) => {
+            try {
+                
+                const featured = await promptsCollection
+                    .find({ status: "approved" })
+                    .sort({ _id: -1 })
+                    .limit(6)
+                    .toArray();
+
+                if (!featured || featured.length === 0) {
+                    return res.status(200).json([]);
+                }
+
+               
+                return res.status(200).json(featured);
+            } catch (error) {
+                console.error("Native MongoDB Featured Prompts Error:", error);
+                return res.status(500).json([]);
+            }
+        });
+
+
+
         // creator prompt add
+
+
 
         app.post("/api/prompts", async (req, res) => {
             try {
@@ -202,32 +233,32 @@ async function run() {
         })
 
         // admin analytics
-    
-    app.get("/api/admin/analytics", async (req, res) => {
-    try {
-  
-        const totalUsers = await usersCollection.countDocuments();
-        const totalPrompts = await promptsCollection.countDocuments();
-        const totalReviews = await reviewsCollection.countDocuments();
 
-        const promptsWithCopies = await promptsCollection.find({}, { projection: { copyCount: 1 } }).toArray();
-        const totalCopies = promptsWithCopies.reduce(
-            (sum, p) => sum + (p.copyCount || 0),
-            0
-        );
+        app.get("/api/admin/analytics", async (req, res) => {
+            try {
 
-        res.status(200).json({
-            totalUsers,
-            totalPrompts,
-            totalReviews,
-            totalCopies
+                const totalUsers = await usersCollection.countDocuments();
+                const totalPrompts = await promptsCollection.countDocuments();
+                const totalReviews = await reviewsCollection.countDocuments();
+
+                const promptsWithCopies = await promptsCollection.find({}, { projection: { copyCount: 1 } }).toArray();
+                const totalCopies = promptsWithCopies.reduce(
+                    (sum, p) => sum + (p.copyCount || 0),
+                    0
+                );
+
+                res.status(200).json({
+                    totalUsers,
+                    totalPrompts,
+                    totalReviews,
+                    totalCopies
+                });
+
+            } catch (error) {
+                console.error("Analytics Error:", error.message);
+                res.status(500).json({ message: "Internal Server Error" });
+            }
         });
-
-    } catch (error) {
-        console.error("Analytics Error:", error.message);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-});
 
 
         // prompt copy count
