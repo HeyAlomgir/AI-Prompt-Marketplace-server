@@ -402,8 +402,8 @@ async function run() {
             try {
                 const latestReviews = await reviewsCollection
                     .find()
-                    .sort({ createdAt: -1 }) 
-                    .limit(4) 
+                    .sort({ createdAt: -1 })
+                    .limit(4)
                     .toArray();
 
                 res.send(latestReviews);
@@ -411,6 +411,46 @@ async function run() {
                 res.status(500).send({ success: false, message: error.message });
             }
         });
+
+
+
+    // top creator API
+   app.get("/api/top-creators", async (req, res) => {
+  try {
+    const prompts = await promptsCollection
+      .find({ status: "approved" })
+      .toArray();
+
+    const creators = {};
+
+    prompts.forEach((prompt) => {
+      const email = prompt.userEmail;
+
+      if (!email) return;
+
+      if (!creators[email]) {
+        creators[email] = {
+          creatorName: prompt.creatorName || email.split("@")[0],
+          userEmail: email,
+          totalPrompts: 0,
+          totalCopies: 0,
+        };
+      }
+
+      creators[email].totalPrompts += 1;
+      creators[email].totalCopies += prompt.copyCount || 0;
+    });
+
+    const topCreators = Object.values(creators)
+      .sort((a, b) => b.totalCopies - a.totalCopies)
+      .slice(0, 4);
+
+    res.send(topCreators);
+  } catch (err) {
+    console.log(err);
+    res.status(500).send({ message: "Server Error" });
+  }
+});
 
 
 
